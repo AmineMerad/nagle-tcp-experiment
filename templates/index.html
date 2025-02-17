@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Networking Project</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Project About TCP/IP and Nagle Algorithm</h1>
+        </header>
+        <main>
+            <p>This project demonstrates the importance of the Nagle algorithm in TCP/IP communication.</p>
+            <form id="sendRequestForm">
+                <label>
+                    <input type="checkbox" id="nagleToggle" name="nagle"> Enable Nagle Algorithm
+                </label>
+                <button type="submit">Send Request to Server</button>
+            </form>
+            <p id="responseMessage" class="response-message"></p>
+
+            <h2>RTT Comparison Table</h2>
+            <table id="rttTable" class="rtt-table">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Nagle Status</th>
+                        <th>Number of Packets</th>
+                        <th>Packet Size (Bytes)</th>
+                        <th>Sleep Interval (s)</th>
+                        <th>RTT (s)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Rows will be dynamically added here -->
+                </tbody>
+            </table>
+        </main>
+        <footer>
+            <p>Networking Module - 2025</p>
+        </footer>
+    </div>
+
+    <script>
+        document.getElementById("sendRequestForm").addEventListener("submit", function(e) {
+            e.preventDefault();
+            
+            const nagleEnabled = document.getElementById("nagleToggle").checked;
+            const formData = new FormData();
+            formData.append("nagle", nagleEnabled ? "on" : "off");
+            
+            fetch("/send-request", { method: "POST", body: formData })
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById("responseMessage").textContent = data;
+
+                    // Extract values from the response
+                    const rttMatch = data.match(/RTT: ([\d.]+) seconds/);
+                    const nagleMatch = data.match(/Nagle: (enabled|disabled)/);
+                    if (rttMatch && nagleMatch) {
+                        const rtt = rttMatch[1];
+                        const nagleStatus = nagleMatch[1];
+                        const timestamp = new Date().toLocaleString();
+                        const numPackets = 10;  // Change if needed
+                        const packetSize = 10;  // Change if needed
+                        const sleepInterval = 0.5;  // Change if needed
+
+                        // Add row to table
+                        const table = document.getElementById("rttTable").querySelector("tbody");
+                        const row = document.createElement("tr");
+                        row.innerHTML = `
+                            <td>${timestamp}</td>
+                            <td>${nagleStatus}</td>
+                            <td>${numPackets}</td>
+                            <td>${packetSize}</td>
+                            <td>${sleepInterval}</td>
+                            <td>${rtt}</td>
+                        `;
+                        table.appendChild(row);
+                    }
+                })
+                .catch(error => {
+                    document.getElementById("responseMessage").textContent = "An error occurred.";
+                    console.error(error);
+                });
+        });
+    </script>
+</body>
+</html>
